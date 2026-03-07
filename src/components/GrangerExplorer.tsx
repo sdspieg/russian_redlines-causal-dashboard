@@ -69,7 +69,7 @@ export default function GrangerExplorer() {
               }}
               onClick={() => setFocusTarget(r)}
             >
-              {r}
+              {r === 'NUCLEAR_THREATS' ? `☢ ${r}` : r}
             </button>
           ))}
           <span className="label" style={{ marginLeft: 20 }}>Direction:</span>

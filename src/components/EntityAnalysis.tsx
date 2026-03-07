@@ -48,7 +48,7 @@ export default function EntityAnalysis() {
               color: focusPred === 'NUCLEAR_THREATS' ? predColor('NUCLEAR_THREATS') : '#8b949e',
             }}
             onClick={() => setFocusPred('NUCLEAR_THREATS')}
-          >NUCLEAR_THREATS</button>
+          >☢ NUCLEAR_THREATS</button>
         </div>
       </div>
 

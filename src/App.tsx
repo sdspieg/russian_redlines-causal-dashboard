@@ -7,6 +7,7 @@ import CausalNetwork from './components/CausalNetwork';
 import CorrelationHeatmap from './components/CorrelationHeatmap';
 import CrossDomainOverlay from './components/CrossDomainOverlay';
 import EntityAnalysis from './components/EntityAnalysis';
+import Editorial from './components/Editorial';
 import './index.css';
 
 const TABS = [
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'network', label: 'Causal Network', color: '#d2a8ff' },
   { id: 'heatmap', label: 'Correlation Heatmap', color: '#ffa657' },
   { id: 'entities', label: 'Entity Analysis', color: '#fdd835' },
+  { id: 'editorial', label: 'The Briefing', color: '#e8e8e8' },
 ];
 
 function App() {
@@ -29,7 +31,7 @@ function App() {
           <img src={import.meta.env.BASE_URL + 'rubase_logo.svg'} alt="RuBase" className="header-logo" />
         </a>
         <div className="header-center">
-          <h1>Causal Analysis Dashboard</h1>
+          <h1>Russian Red Lines — Causal Analysis</h1>
           <p className="subtitle">War Events x Russian RRLS/NTS Rhetoric — Temporal Knowledge Graph Analysis</p>
           <MethodologyModal />
         </div>
@@ -59,10 +61,11 @@ function App() {
         {activeTab === 'network' && <CausalNetwork />}
         {activeTab === 'heatmap' && <CorrelationHeatmap />}
         {activeTab === 'entities' && <EntityAnalysis />}
+        {activeTab === 'editorial' && <Editorial />}
       </main>
 
       <footer>
-        <p>Causal Analysis Dashboard | Data from TKG snapshots {new Date().toISOString().slice(0, 10)}</p>
+        <p>Russian Red Lines — Causal Analysis | Data from TKG snapshots {new Date().toISOString().slice(0, 10)}</p>
       </footer>
     </div>
   );

@@ -102,7 +102,7 @@ export default function CausalNetwork() {
         opacity: 0.9,
         line: { color: '#1a1a2e', width: 2 },
       },
-      text: nodes.map(([n]) => n.replace('_', '\n')),
+      text: nodes.map(([n]) => n === 'NUCLEAR_THREATS' ? '☢ NUCLEAR\nTHREATS' : n.replace('_', '\n')),
       textposition: 'bottom center',
       textfont: { size: 9, color: '#e0e0e0' },
       hoverinfo: 'text',

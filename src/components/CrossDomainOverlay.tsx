@@ -117,24 +117,22 @@ export default function CrossDomainOverlay() {
         });
       }
 
-      // NTS bubbles
+      // NTS ☢ markers
       if (showNTS && ntsByMonth.length > 0) {
         const maxCount = Math.max(...ntsByMonth.map(r => r.count), 1);
         out.push({
-          type: 'scatter', mode: 'markers',
+          type: 'scatter', mode: 'text',
           name: `NTS (${totalNTS})`,
           x: ntsByMonth.map(r => r.month),
           y: ntsByMonth.map(r => r.avgConf),
-          marker: {
-            size: ntsByMonth.map(r => 10 + (r.count / maxCount) * 30),
-            color: '#ffd700',
-            opacity: ntsByMonth.map(r => 0.5 + r.avgConf * 0.5),
-            symbol: 'diamond',
-            line: { color: '#ffd700', width: 1 },
+          text: ntsByMonth.map(() => '☢'),
+          textfont: {
+            size: ntsByMonth.map(r => 14 + (r.count / maxCount) * 20),
+            color: ntsByMonth.map(r => {
+              const a = Math.round((0.5 + r.avgConf * 0.5) * 255);
+              return `rgba(255, 215, 0, ${a / 255})`;
+            }),
           },
-          text: ntsByMonth.map(r => r.avgConf > 0 ? r.avgConf.toFixed(2) : ''),
-          textposition: 'top center',
-          textfont: { size: 9, color: '#e0e0e0' },
           yaxis: 'y2',
           hovertemplate: '%{x}<br>NTS count: %{customdata}<br>Avg confidence: %{y:.2f}<extra></extra>',
           customdata: ntsByMonth.map(r => r.count),
@@ -162,12 +160,14 @@ export default function CrossDomainOverlay() {
       }
       if (showNTS) {
         out.push({
-          type: 'scatter', mode: 'lines+markers',
-          name: 'NUCLEAR_THREATS',
+          type: 'scatter', mode: 'lines+text',
+          name: 'NUCLEAR_THREATS ☢',
           x: ntsByMonth.map(r => r.month),
           y: ntsByMonth.map(r => r.count),
           line: { color: '#ffd700', width: 2 },
-          marker: { size: 4 },
+          text: ntsByMonth.map(() => '☢'),
+          textposition: 'top center',
+          textfont: { size: 12, color: '#ffd700' },
           yaxis: 'y2',
         });
       }
@@ -196,11 +196,14 @@ export default function CrossDomainOverlay() {
       }
       if (showNTS) {
         out.push({
-          type: 'scatter', mode: 'lines',
-          name: 'NUCLEAR_THREATS',
+          type: 'scatter', mode: 'lines+text',
+          name: 'NUCLEAR_THREATS ☢',
           x: ntsByMonth.map(r => r.month),
           y: norm(ntsByMonth.map(r => r.count)),
           line: { color: '#ffd700', width: 2 },
+          text: ntsByMonth.map(() => '☢'),
+          textposition: 'top center',
+          textfont: { size: 11, color: '#ffd700' },
         });
       }
     }
@@ -244,7 +247,7 @@ export default function CrossDomainOverlay() {
         </div>
         <div className="toggle-row">
           <label><input type="checkbox" checked={showRRLS} onChange={e => setShowRRLS(e.target.checked)} /> RRLS</label>
-          <label><input type="checkbox" checked={showNTS} onChange={e => setShowNTS(e.target.checked)} /> NTS</label>
+          <label><input type="checkbox" checked={showNTS} onChange={e => setShowNTS(e.target.checked)} /> ☢ NTS</label>
         </div>
       </div>
 

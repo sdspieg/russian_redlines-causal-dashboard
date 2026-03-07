@@ -40,7 +40,7 @@ export default function TimeSeries() {
       }
       out.push({
         type: 'scatter', mode: 'lines',
-        name: p,
+        name: p === 'NUCLEAR_THREATS' ? `☢ ${p}` : p,
         x: data.dates, y,
         line: { color: predColor(p), width: p === 'RED_LINES' || p === 'NUCLEAR_THREATS' ? 2.5 : 1.2 },
         opacity: p === 'RED_LINES' || p === 'NUCLEAR_THREATS' ? 1 : 0.7,
@@ -58,7 +58,7 @@ export default function TimeSeries() {
     if (showSeverity && !normalize && selected.has('NUCLEAR_THREATS')) {
       out.push({
         type: 'scatter', mode: 'lines',
-        name: 'NT Severity',
+        name: '☢ NT Severity',
         x: data.dates, y: data.severity_nt,
         line: { color: '#ffd700', width: 1, dash: 'dot' },
         yaxis: 'y2',
@@ -87,7 +87,7 @@ export default function TimeSeries() {
               }}
               onClick={() => toggle(p)}
             >
-              {p}
+              {p === 'NUCLEAR_THREATS' ? `☢ ${p}` : p}
             </button>
           ))}
         </div>
