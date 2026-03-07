@@ -1,11 +1,15 @@
 import { useEffect, useState, useMemo } from 'react';
 import Plot from './Plot';
+import ChartInfo from './ChartInfo';
 import { load } from '../data';
 import type { PredicateTimeseries, RRLSStatement, NTSStatement } from '../types';
-import { predColor, PRED_COLORS } from '../colors';
+import { predColor } from '../colors';
 
 const EVENT_PREDS = ['ATTACKS', 'THREATENS', 'SANCTIONS', 'AIDS', 'TRADES_FOSSIL',
   'CONTROLS', 'LAUNCHES', 'DISPLACES', 'CYBER_ATTACKS', 'DISINFORMS', 'ARMS'];
+
+// TKG date range — filter rhetoric to match
+const TKG_START = '2022-02';
 
 type ChartMode = 'bars_bubbles' | 'dual_axis' | 'normalized';
 
@@ -30,6 +34,7 @@ export default function CrossDomainOverlay() {
     for (const s of rrls) {
       if (!s.date) continue;
       const m = s.date.slice(0, 7);
+      if (m < TKG_START) continue;
       if (!byM[m]) byM[m] = { count: 0, totalConf: 0 };
       byM[m].count++;
       byM[m].totalConf += s.overall_confidence || 0;
@@ -37,7 +42,7 @@ export default function CrossDomainOverlay() {
     return Object.entries(byM).map(([month, v]) => ({
       month,
       count: v.count,
-      avgConf: v.count > 0 ? v.totalConf / v.count : 0,
+      avgConf: v.count > 0 ? v.totalConf / v.count / 10 : 0, // normalize to 0-1
     })).sort((a, b) => a.month.localeCompare(b.month));
   }, [rrls]);
 
@@ -46,6 +51,7 @@ export default function CrossDomainOverlay() {
     for (const s of nts) {
       if (!s.date) continue;
       const m = s.date.slice(0, 7);
+      if (m < TKG_START) continue;
       if (!byM[m]) byM[m] = { count: 0, totalConf: 0 };
       byM[m].count++;
       byM[m].totalConf += s.overall_confidence || 0;
@@ -53,7 +59,7 @@ export default function CrossDomainOverlay() {
     return Object.entries(byM).map(([month, v]) => ({
       month,
       count: v.count,
-      avgConf: v.count > 0 ? v.totalConf / v.count : 0,
+      avgConf: v.count > 0 ? v.totalConf / v.count / 10 : 0,
     })).sort((a, b) => a.month.localeCompare(b.month));
   }, [nts]);
 
@@ -75,7 +81,7 @@ export default function CrossDomainOverlay() {
   const totalNTS = ntsByMonth.reduce((s, r) => s + r.count, 0);
 
   const traces = useMemo(() => {
-    const out: Plotly.Data[] = [];
+    const out: any[] = [];
 
     if (chartMode === 'bars_bubbles') {
       // Green bars for event predicate
@@ -84,51 +90,55 @@ export default function CrossDomainOverlay() {
         name: `${eventPred} (${totalEvent.toLocaleString()} total)`,
         x: eventByMonth.map(r => r.month),
         y: eventByMonth.map(r => r.count),
-        marker: { color: predColor(eventPred), opacity: 0.7 },
+        marker: { color: '#00FF9D', opacity: 0.7 },
         yaxis: 'y',
-      } as Plotly.Data);
+      });
 
-      // RRLS bubbles
-      if (showRRLS) {
+      // RRLS bubbles — size=count, opacity=confidence, y=confidence
+      if (showRRLS && rrlsByMonth.length > 0) {
         const maxCount = Math.max(...rrlsByMonth.map(r => r.count), 1);
         out.push({
-          type: 'scatter', mode: 'markers+text',
+          type: 'scatter', mode: 'markers',
           name: `RRLS (${totalRRLS})`,
           x: rrlsByMonth.map(r => r.month),
           y: rrlsByMonth.map(r => r.avgConf),
           marker: {
-            size: rrlsByMonth.map(r => 8 + (r.count / maxCount) * 30),
+            size: rrlsByMonth.map(r => 10 + (r.count / maxCount) * 35),
             color: '#ff4444',
-            opacity: rrlsByMonth.map(r => 0.4 + (r.avgConf / 10) * 0.6),
+            opacity: rrlsByMonth.map(r => 0.5 + r.avgConf * 0.5),
+            line: { color: '#ff4444', width: 1 },
           },
-          text: rrlsByMonth.map(r => r.avgConf > 0 ? r.avgConf.toFixed(1) : ''),
-          textposition: 'middle center',
-          textfont: { size: 9, color: '#fff' },
+          text: rrlsByMonth.map(r => r.avgConf > 0 ? r.avgConf.toFixed(2) : ''),
+          textposition: 'top center',
+          textfont: { size: 10, color: '#e0e0e0' },
           yaxis: 'y2',
-          hovertemplate: '%{x}<br>RRLS: %{marker.size:.0f} statements<br>Avg confidence: %{y:.1f}/10<extra></extra>',
-        } as Plotly.Data);
+          hovertemplate: '%{x}<br>RRLS count: %{customdata}<br>Avg confidence: %{y:.2f}<extra></extra>',
+          customdata: rrlsByMonth.map(r => r.count),
+        });
       }
 
       // NTS bubbles
-      if (showNTS) {
+      if (showNTS && ntsByMonth.length > 0) {
         const maxCount = Math.max(...ntsByMonth.map(r => r.count), 1);
         out.push({
-          type: 'scatter', mode: 'markers+text',
+          type: 'scatter', mode: 'markers',
           name: `NTS (${totalNTS})`,
           x: ntsByMonth.map(r => r.month),
           y: ntsByMonth.map(r => r.avgConf),
           marker: {
-            size: ntsByMonth.map(r => 8 + (r.count / maxCount) * 25),
+            size: ntsByMonth.map(r => 10 + (r.count / maxCount) * 30),
             color: '#ffd700',
-            opacity: ntsByMonth.map(r => 0.4 + (r.avgConf / 10) * 0.6),
+            opacity: ntsByMonth.map(r => 0.5 + r.avgConf * 0.5),
             symbol: 'diamond',
+            line: { color: '#ffd700', width: 1 },
           },
-          text: ntsByMonth.map(r => r.avgConf > 0 ? r.avgConf.toFixed(1) : ''),
-          textposition: 'middle center',
-          textfont: { size: 8, color: '#000' },
+          text: ntsByMonth.map(r => r.avgConf > 0 ? r.avgConf.toFixed(2) : ''),
+          textposition: 'top center',
+          textfont: { size: 9, color: '#e0e0e0' },
           yaxis: 'y2',
-          hovertemplate: '%{x}<br>NTS: %{marker.size:.0f} statements<br>Avg confidence: %{y:.1f}/10<extra></extra>',
-        } as Plotly.Data);
+          hovertemplate: '%{x}<br>NTS count: %{customdata}<br>Avg confidence: %{y:.2f}<extra></extra>',
+          customdata: ntsByMonth.map(r => r.count),
+        });
       }
     } else if (chartMode === 'dual_axis') {
       out.push({
@@ -138,17 +148,17 @@ export default function CrossDomainOverlay() {
         y: eventByMonth.map(r => r.count),
         line: { color: predColor(eventPred), width: 2 },
         marker: { size: 4 },
-      } as Plotly.Data);
+      });
       if (showRRLS) {
         out.push({
           type: 'scatter', mode: 'lines+markers',
           name: 'RED_LINES',
           x: rrlsByMonth.map(r => r.month),
           y: rrlsByMonth.map(r => r.count),
-          line: { color: '#ff7b72', width: 2 },
+          line: { color: '#ff4444', width: 2 },
           marker: { size: 4 },
           yaxis: 'y2',
-        } as Plotly.Data);
+        });
       }
       if (showNTS) {
         out.push({
@@ -159,7 +169,7 @@ export default function CrossDomainOverlay() {
           line: { color: '#ffd700', width: 2 },
           marker: { size: 4 },
           yaxis: 'y2',
-        } as Plotly.Data);
+        });
       }
     } else {
       // Normalized overlay
@@ -174,15 +184,15 @@ export default function CrossDomainOverlay() {
         x: eventByMonth.map(r => r.month),
         y: norm(eventByMonth.map(r => r.count)),
         line: { color: predColor(eventPred), width: 2 },
-      } as Plotly.Data);
+      });
       if (showRRLS) {
         out.push({
           type: 'scatter', mode: 'lines',
           name: 'RED_LINES',
           x: rrlsByMonth.map(r => r.month),
           y: norm(rrlsByMonth.map(r => r.count)),
-          line: { color: '#ff7b72', width: 2 },
-        } as Plotly.Data);
+          line: { color: '#ff4444', width: 2 },
+        });
       }
       if (showNTS) {
         out.push({
@@ -191,7 +201,7 @@ export default function CrossDomainOverlay() {
           x: ntsByMonth.map(r => r.month),
           y: norm(ntsByMonth.map(r => r.count)),
           line: { color: '#ffd700', width: 2 },
-        } as Plotly.Data);
+        });
       }
     }
     return out;
@@ -200,7 +210,7 @@ export default function CrossDomainOverlay() {
   if (!ts) return <div className="loading">Loading...</div>;
 
   const title = chartMode === 'bars_bubbles'
-    ? `Do ${eventPred.replace('_', ' ')} Trigger Russian Rhetoric?`
+    ? `Do ${eventPred.replace(/_/g, ' ')} Trigger Russian Rhetoric?`
     : `${eventPred} vs. Russian Rhetoric Over Time`;
 
   return (
@@ -208,7 +218,7 @@ export default function CrossDomainOverlay() {
       <h2>Cross-Domain Overlay</h2>
       <p className="subtitle">
         Overlay any event predicate with RRLS/NTS rhetoric data.
-        Bubble size = statement count, opacity = confidence.
+        Bubble size = statement count, opacity = confidence, Y position = avg confidence.
       </p>
 
       <div className="controls">
@@ -240,29 +250,52 @@ export default function CrossDomainOverlay() {
 
       <div className="chart-row">
         <div className="chart-box" style={{ minWidth: '100%' }}>
-          <h4>{title}</h4>
+          <div className="chart-title-bar">
+            <h4>{title}</h4>
+            <ChartInfo
+              title="Cross-Domain Overlay"
+              description="Compares event predicates from the Temporal Knowledge Graph with RRLS/NTS rhetoric over time. In Bars+Bubbles mode, green bars show monthly event counts; red circles show RRLS statements (size = count, opacity = confidence, Y = avg confidence 0-1); yellow diamonds show NTS. This mirrors the 'Do US Arms Deliveries Trigger RRLS?' visualization from the research paper."
+            />
+          </div>
+          <p style={{ color: '#6a6a7a', fontSize: 11, marginBottom: 8 }}>
+            Total Statements: {(totalRRLS + totalNTS).toLocaleString()} | Total {eventPred}: {totalEvent.toLocaleString()}
+          </p>
           <Plot
             data={traces}
             layout={{
               paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
-              font: { color: '#e0e0e0' },
+              font: { color: '#e0e0e0', family: 'Inter, sans-serif' },
               margin: { t: 20, b: 60, l: 70, r: 70 },
               height: 500,
-              xaxis: { title: 'Month', gridcolor: '#21262d', tickangle: -45 },
+              xaxis: {
+                title: { text: 'Year-Month', font: { size: 12 } },
+                gridcolor: '#2a3a5a',
+                tickangle: -45,
+              },
               yaxis: {
-                title: chartMode === 'normalized' ? 'Z-score' : `${eventPred} Count`,
-                gridcolor: '#21262d',
+                title: {
+                  text: chartMode === 'normalized' ? 'Z-score' : `${eventPred} Count`,
+                  font: { size: 12 },
+                },
+                gridcolor: '#2a3a5a',
               },
               ...(chartMode !== 'normalized' ? {
                 yaxis2: {
-                  title: chartMode === 'bars_bubbles' ? 'Avg Confidence (0-10)' : 'Rhetoric Count',
+                  title: {
+                    text: chartMode === 'bars_bubbles' ? 'Avg Confidence (0-1)' : 'Rhetoric Count',
+                    font: { size: 12 },
+                  },
                   overlaying: 'y', side: 'right',
-                  gridcolor: '#21262d33',
-                  ...(chartMode === 'bars_bubbles' ? { range: [0, 10] } : {}),
+                  gridcolor: 'rgba(42, 58, 90, 0.3)',
+                  ...(chartMode === 'bars_bubbles' ? { range: [0.3, 1.05] } : {}),
                 },
               } : {}),
-              legend: { orientation: 'h', y: 1.12, font: { size: 11 } },
-              hovermode: 'x unified',
+              legend: {
+                orientation: 'h', y: 1.12,
+                font: { size: 11 },
+                bgcolor: 'transparent',
+              },
+              hovermode: 'closest',
               barmode: 'group',
             }}
             config={{ displayModeBar: false, responsive: true }}

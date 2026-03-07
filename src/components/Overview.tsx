@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { load } from '../data';
+import ChartInfo from './ChartInfo';
 import type { SummaryStats, GrangerResult } from '../types';
 import { predColor, sigColor } from '../colors';
 
@@ -63,7 +64,10 @@ export default function Overview() {
 
       <div className="chart-row">
         <div className="chart-box">
-          <h4>Edge Instances by Predicate</h4>
+          <div className="chart-title-bar">
+            <h4>Edge Instances by Predicate</h4>
+            <ChartInfo title="Edge Instances by Predicate" description="Total number of edges (triples) per predicate type across all 210 weekly TKG snapshots. Each edge represents a relationship between two entities (e.g., country:RUS ATTACKS country:UKR)." />
+          </div>
           <div className="predicate-list">
             {preds.map(([p, count]) => (
               <div key={p} className="pred-row">
@@ -84,7 +88,10 @@ export default function Overview() {
         </div>
 
         <div className="chart-box">
-          <h4>Key Causal Findings</h4>
+          <div className="chart-title-bar">
+            <h4>Key Causal Findings</h4>
+            <ChartInfo title="Key Causal Findings" description="Summary of significant Granger-causal relationships involving rhetoric predicates (RED_LINES, NUCLEAR_THREATS). Triggers show which event types predict future rhetoric; Effects show what rhetoric predicts. F-statistics and lag (in weeks) are shown. Color indicates significance: red=p<0.001, orange=p<0.01, yellow=p<0.05." />
+          </div>
           <div className="findings">
             <div className="finding-section">
               <h5 style={{ color: '#ff7b72' }}>What Triggers Rhetoric?</h5>

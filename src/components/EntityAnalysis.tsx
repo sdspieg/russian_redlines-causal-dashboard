@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Plot from './Plot';
+import ChartInfo from './ChartInfo';
 import { load } from '../data';
 import type { EntityTimeseries } from '../types';
 import { predColor } from '../colors';
@@ -53,11 +54,17 @@ export default function EntityAnalysis() {
 
       <div className="chart-row">
         <div className="chart-box">
-          <h4>Top Entity Pairs — {focusPred}</h4>
+          <div className="chart-title-bar">
+            <h4>Top Entity Pairs — {focusPred}</h4>
+            <ChartInfo title="Top Entity Pairs" description="Horizontal bar chart of the most frequent source→target entity pairs for the selected rhetoric predicate. Shows which actors most often direct RED_LINES or NUCLEAR_THREATS at which targets (e.g., Russia → NATO, Russia → United States)." />
+          </div>
           <Plot
             data={[{
               type: 'bar',
-              y: pairs.map(p => `${p.source_entity} → ${p.target_entity}`),
+              y: pairs.map(p => {
+                const fmt = (e: string) => e.replace(/^(country|actor):/, '').replace(/_/g, ' ');
+                return `${fmt(p.source_entity)} → ${fmt(p.target_entity)}`;
+              }),
               x: pairs.map(p => p.total),
               orientation: 'h',
               marker: { color: pairs.map((_, i) => ENTITY_COLORS[i % ENTITY_COLORS.length]) },
@@ -67,10 +74,10 @@ export default function EntityAnalysis() {
             layout={{
               paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
               font: { color: '#e0e0e0' },
-              margin: { t: 10, b: 30, l: 220, r: 60 },
+              margin: { t: 10, b: 30, l: 200, r: 60 },
               height: Math.max(250, pairs.length * 35 + 60),
               yaxis: { autorange: 'reversed', type: 'category' },
-              xaxis: { title: 'Total Edges', gridcolor: '#21262d' },
+              xaxis: { title: 'Total Edges', gridcolor: '#2a3a5a' },
             }}
             config={{ displayModeBar: false, responsive: true }}
             style={{ width: '100%' }}
@@ -78,12 +85,15 @@ export default function EntityAnalysis() {
         </div>
 
         <div className="chart-box">
-          <h4>Top Pairs Over Time — {focusPred}</h4>
+          <div className="chart-title-bar">
+            <h4>Top Pairs Over Time — {focusPred}</h4>
+            <ChartInfo title="Entity Pairs Over Time" description="Weekly time series for the top 6 entity pairs of the selected rhetoric predicate. Shows how rhetoric between specific actor pairs evolves over the 210-week observation period." />
+          </div>
           <Plot
             data={pairs.slice(0, 6).map((p, i) => ({
               type: 'scatter' as const,
               mode: 'lines' as const,
-              name: `${p.source_entity} → ${p.target_entity}`,
+              name: `${p.source_entity.replace(/^(country|actor):/, '').replace(/_/g, ' ')} → ${p.target_entity.replace(/^(country|actor):/, '').replace(/_/g, ' ')}`,
               x: data.dates,
               y: p.series,
               line: { color: ENTITY_COLORS[i % ENTITY_COLORS.length], width: 1.5 },
@@ -93,8 +103,8 @@ export default function EntityAnalysis() {
               font: { color: '#e0e0e0' },
               margin: { t: 10, b: 50, l: 50, r: 20 },
               height: 400,
-              xaxis: { title: 'Week', gridcolor: '#21262d' },
-              yaxis: { title: 'Edge Count', gridcolor: '#21262d' },
+              xaxis: { title: 'Week', gridcolor: '#2a3a5a' },
+              yaxis: { title: 'Edge Count', gridcolor: '#2a3a5a' },
               legend: { orientation: 'h', y: 1.15, font: { size: 9 } },
               hovermode: 'x unified',
             }}

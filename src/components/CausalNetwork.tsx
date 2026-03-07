@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import Plot from './Plot';
+import ChartInfo from './ChartInfo';
 import { load } from '../data';
 import type { CausalEdge } from '../types';
 import { predColor } from '../colors';
@@ -99,7 +100,7 @@ export default function CausalNetwork() {
         size: nodes.map(([n]) => isRhetoric(n) ? 30 : 20),
         color: nodes.map(([n]) => predColor(n)),
         opacity: 0.9,
-        line: { color: '#0d1117', width: 2 },
+        line: { color: '#1a1a2e', width: 2 },
       },
       text: nodes.map(([n]) => n.replace('_', '\n')),
       textposition: 'bottom center',
@@ -148,6 +149,10 @@ export default function CausalNetwork() {
 
       <div className="chart-row">
         <div className="chart-box" style={{ minWidth: '100%' }}>
+          <div className="chart-title-bar">
+            <h4>Granger Causal Network</h4>
+            <ChartInfo title="Causal Network Graph" description="Directed graph showing significant Granger-causal relationships between predicates. Each arrow means the source predicate's past values help predict the target's future values. Red arrows point toward rhetoric (RED_LINES, NUCLEAR_THREATS). Green arrows show what rhetoric predicts. Arrow width is proportional to F-statistic. Use the p-value slider to filter by significance level." />
+          </div>
           <Plot
             data={traces}
             layout={{

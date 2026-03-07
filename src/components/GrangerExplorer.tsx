@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import Plot from './Plot';
+import ChartInfo from './ChartInfo';
 import { load } from '../data';
 import type { GrangerResult, CrossCorrelation } from '../types';
 import { predColor, sigColor, PRED_COLORS } from '../colors';
@@ -89,11 +90,14 @@ export default function GrangerExplorer() {
 
       <div className="chart-row">
         <div className="chart-box">
-          <h4>
-            {mode === 'triggers'
-              ? `What Triggers ${focusTarget}?`
-              : `What Does ${focusTarget} Cause?`}
-          </h4>
+          <div className="chart-title-bar">
+            <h4>
+              {mode === 'triggers'
+                ? `What Triggers ${focusTarget}?`
+                : `What Does ${focusTarget} Cause?`}
+            </h4>
+            <ChartInfo title="Granger Causality F-Statistics" description="Horizontal bar chart of significant Granger-causal predictors. The F-statistic measures how much X improves prediction of Y. Color indicates significance: red=p<0.001, orange=p<0.01, yellow=p<0.05. Lag shows the time delay in weeks." />
+          </div>
           {displayed.length > 0 ? (
             <Plot
               data={[{
@@ -110,16 +114,17 @@ export default function GrangerExplorer() {
                   const stars = g.p_value < 0.001 ? '***' : g.p_value < 0.01 ? '**' : '*';
                   return `F=${g.f_stat.toFixed(1)} p=${g.p_value.toFixed(4)} ${stars} (lag=${g.lag}w)`;
                 }),
-                textposition: 'outside',
+                textposition: 'auto',
                 textfont: { size: 10 },
+                insidetextanchor: 'start',
               }]}
               layout={{
                 paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
                 font: { color: '#e0e0e0' },
-                margin: { t: 10, b: 30, l: 140, r: 180 },
+                margin: { t: 10, b: 30, l: 140, r: 200 },
                 height: Math.max(200, displayed.length * 40 + 60),
                 yaxis: { autorange: 'reversed', type: 'category' },
-                xaxis: { title: 'F-statistic', gridcolor: '#21262d' },
+                xaxis: { title: 'F-statistic', gridcolor: '#2a3a5a' },
               }}
               config={{ displayModeBar: false, responsive: true }}
               style={{ width: '100%' }}
@@ -130,7 +135,10 @@ export default function GrangerExplorer() {
         </div>
 
         <div className="chart-box">
-          <h4>Severity-Weighted: What Triggers High-Severity {focusTarget}?</h4>
+          <div className="chart-title-bar">
+            <h4>Severity-Weighted: What Triggers High-Severity {focusTarget}?</h4>
+            <ChartInfo title="Severity-Weighted Triggers" description="Granger causality tests using severity-weighted RED_LINES/NUCLEAR_THREATS counts as the target variable. Higher F-statistics indicate stronger predictive power. This captures whether certain events precede not just more rhetoric, but more intense rhetoric." />
+          </div>
           {severityTriggers.length > 0 ? (
             <Plot
               data={[{
@@ -145,16 +153,17 @@ export default function GrangerExplorer() {
                   const stars = g.p_value < 0.001 ? '***' : g.p_value < 0.01 ? '**' : '*';
                   return `F=${g.f_stat.toFixed(1)} p=${g.p_value.toFixed(4)} ${stars}`;
                 }),
-                textposition: 'outside',
+                textposition: 'auto',
                 textfont: { size: 10 },
+                insidetextanchor: 'start',
               }]}
               layout={{
                 paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
                 font: { color: '#e0e0e0' },
-                margin: { t: 10, b: 30, l: 140, r: 160 },
+                margin: { t: 10, b: 30, l: 140, r: 180 },
                 height: Math.max(200, severityTriggers.length * 40 + 60),
                 yaxis: { autorange: 'reversed', type: 'category' },
-                xaxis: { title: 'F-statistic', gridcolor: '#21262d' },
+                xaxis: { title: 'F-statistic', gridcolor: '#2a3a5a' },
               }}
               config={{ displayModeBar: false, responsive: true }}
               style={{ width: '100%' }}
@@ -167,7 +176,10 @@ export default function GrangerExplorer() {
 
       <div className="chart-row">
         <div className="chart-box" style={{ minWidth: '100%' }}>
-          <h4>Cross-Correlation: {xcorrSource} ↔ {focusTarget}</h4>
+          <div className="chart-title-bar">
+            <h4>Cross-Correlation: {xcorrSource} ↔ {focusTarget}</h4>
+            <ChartInfo title="Cross-Correlation Function" description="Pearson correlation between two predicates at different time lags (-8 to +8 weeks). Positive lags mean the source predicate leads; negative lags mean the target leads. Dashed lines show the 95% significance threshold (±0.135). This reveals temporal lead-lag relationships between event types." />
+          </div>
           <div className="controls" style={{ marginBottom: 10 }}>
             <select
               value={xcorrSource}
@@ -197,9 +209,9 @@ export default function GrangerExplorer() {
                 height: 300,
                 xaxis: {
                   title: `Lag (weeks) — positive = ${xcorrSource} leads`,
-                  gridcolor: '#21262d',
+                  gridcolor: '#2a3a5a',
                 },
-                yaxis: { title: 'Correlation', gridcolor: '#21262d' },
+                yaxis: { title: 'Correlation', gridcolor: '#2a3a5a' },
                 shapes: [
                   { type: 'line', x0: -8.5, x1: 8.5, y0: 0, y1: 0, line: { color: '#484f58' } },
                   { type: 'line', x0: -8.5, x1: 8.5, y0: 0.135, y1: 0.135, line: { color: '#484f58', dash: 'dot' } },

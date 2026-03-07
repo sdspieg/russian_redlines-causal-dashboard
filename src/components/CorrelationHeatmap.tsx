@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Plot from './Plot';
+import ChartInfo from './ChartInfo';
 import { load } from '../data';
 import type { CorrelationMatrix } from '../types';
 
@@ -22,6 +23,10 @@ export default function CorrelationHeatmap() {
 
       <div className="chart-row">
         <div className="chart-box" style={{ minWidth: '100%' }}>
+          <div className="chart-title-bar">
+            <h4>Lagged Correlation Heatmap</h4>
+            <ChartInfo title="Lagged Correlation Matrix" description="Pearson correlation between predicate X at week t-1 and predicate Y at week t. Rows represent the leading (earlier) predicate, columns represent the lagging (later) predicate. Values near 1 indicate strong positive co-movement with a 1-week lead. Darker reds indicate stronger correlations. The diagonal shows each predicate's autocorrelation." />
+          </div>
           <Plot
             data={[{
               type: 'heatmap',

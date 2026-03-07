@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import Plot from './Plot';
+import ChartInfo from './ChartInfo';
 import { load } from '../data';
 import type { PredicateTimeseries } from '../types';
 import { predColor, PRED_COLORS } from '../colors';
@@ -107,6 +108,10 @@ export default function TimeSeries() {
 
       <div className="chart-row">
         <div className="chart-box" style={{ minWidth: '100%' }}>
+          <div className="chart-title-bar">
+            <h4>Weekly Predicate Edge Counts</h4>
+            <ChartInfo title="Predicate Time Series" description="Weekly edge counts for each predicate across 210 TKG snapshots (Feb 2022 - Mar 2026). Toggle predicates on/off, normalize to z-scores for comparison, or overlay severity scores (dashed lines) for RED_LINES and NUCLEAR_THREATS." />
+          </div>
           <Plot
             data={traces}
             layout={{
@@ -114,9 +119,9 @@ export default function TimeSeries() {
               font: { color: '#e0e0e0' },
               margin: { t: 20, b: 50, l: 60, r: 60 },
               height: 500,
-              xaxis: { title: 'Week', gridcolor: '#21262d' },
-              yaxis: { title: normalize ? 'Z-score' : 'Edge Count', gridcolor: '#21262d' },
-              yaxis2: { title: 'Severity', overlaying: 'y', side: 'right', gridcolor: '#21262d33' },
+              xaxis: { title: 'Week', gridcolor: '#2a3a5a' },
+              yaxis: { title: normalize ? 'Z-score' : 'Edge Count', gridcolor: '#2a3a5a' },
+              yaxis2: { title: 'Severity', overlaying: 'y', side: 'right', gridcolor: '#2a3a5a33' },
               legend: { orientation: 'h', y: 1.12, font: { size: 10 } },
               hovermode: 'x unified',
             }}
