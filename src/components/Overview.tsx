@@ -60,6 +60,22 @@ export default function Overview() {
           <div className="stat-value">{feedbackLoops.length / 2}</div>
           <div className="stat-label">Feedback Loops</div>
         </div>
+        {(stats as any).n_country_triggers && (
+          <>
+            <div className="stat-card" style={{ borderColor: '#58a6ff' }}>
+              <div className="stat-value">{(stats as any).n_country_triggers}</div>
+              <div className="stat-label">Country-Specific Triggers (FDR)</div>
+            </div>
+            <div className="stat-card" style={{ borderColor: '#ffa657' }}>
+              <div className="stat-value">{(stats as any).n_weapon_triggers}</div>
+              <div className="stat-label">Weapon-Type Triggers (FDR)</div>
+            </div>
+            <div className="stat-card" style={{ borderColor: '#d2a8ff' }}>
+              <div className="stat-value">{(stats as any).stable_pairs}</div>
+              <div className="stat-label">Stable Across All Phases</div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="chart-row">

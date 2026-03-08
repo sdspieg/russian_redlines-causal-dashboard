@@ -107,6 +107,7 @@ export default function EntityAnalysis() {
               yaxis: { title: 'Edge Count', gridcolor: '#2a3a5a' },
               legend: { orientation: 'h', y: 1.15, font: { size: 9 } },
               hovermode: 'x unified',
+              hoverlabel: { bgcolor: '#1e2a45', bordercolor: '#2a3a5a', font: { color: '#e0e0e0' } },
             }}
             config={{ displayModeBar: false, responsive: true }}
             style={{ width: '100%' }}

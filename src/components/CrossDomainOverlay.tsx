@@ -11,6 +11,35 @@ const EVENT_PREDS = ['ATTACKS', 'THREATENS', 'SANCTIONS', 'AIDS', 'TRADES_FOSSIL
 // TKG date range — filter rhetoric to match
 const TKG_START = '2022-02';
 
+// Map string intensities to numeric values
+const RRLS_LINE_INTENSITY: Record<string, number> = { Low: 1, Moderate: 2, High: 3, 'Very High': 4 };
+const RRLS_THREAT_INTENSITY: Record<string, number> = { Low: 1, Moderate: 2, High: 3, 'Very High': 4 };
+
+function rrlsIntensity(s: RRLSStatement): number {
+  const li = RRLS_LINE_INTENSITY[(s as any).line_intensity] || 2;
+  const ti = RRLS_THREAT_INTENSITY[(s as any).threat_intensity] || 2;
+  return (li + ti) / 2; // 1-4 scale
+}
+
+const NTS_TONE: Record<string, number> = {
+  'Firm (Level 2)': 2, 'Aggressive (Level 3)': 3,
+  'Belligerent (Level 4)': 4, 'Apocalyptic (Level 5)': 5,
+};
+const NTS_COND: Record<string, number> = {
+  'Conditional (Level 1)': 1, 'Situational (Level 2)': 2,
+  'Implicit Condition (Level 3)': 3, 'Unconditional (Level 4)': 4,
+};
+const NTS_CONS: Record<string, number> = {
+  'Significant (Level 3)': 3, 'Severe (Level 4)': 4, 'Catastrophic (Level 5)': 5,
+};
+
+function ntsIntensity(s: NTSStatement): number {
+  const t = NTS_TONE[(s as any).tone] || 2;
+  const c = NTS_COND[(s as any).conditionality] || 1;
+  const q = NTS_CONS[(s as any).consequences] || 3;
+  return (t + c + q) / 3; // ~1-5 scale, normalize to 1-4 for comparability
+}
+
 type ChartMode = 'bars_bubbles' | 'dual_axis' | 'normalized';
 
 export default function CrossDomainOverlay() {
@@ -28,38 +57,42 @@ export default function CrossDomainOverlay() {
     load<NTSStatement[]>('nts_statements.json').then(setNts);
   }, []);
 
-  // Aggregate RRLS/NTS by month for bubble overlay
+  // Aggregate RRLS/NTS by month — intensity for Y, confidence for alpha
   const rrlsByMonth = useMemo(() => {
-    const byM: Record<string, { count: number; totalConf: number }> = {};
+    const byM: Record<string, { count: number; totalConf: number; totalIntensity: number }> = {};
     for (const s of rrls) {
       if (!s.date) continue;
       const m = s.date.slice(0, 7);
       if (m < TKG_START) continue;
-      if (!byM[m]) byM[m] = { count: 0, totalConf: 0 };
+      if (!byM[m]) byM[m] = { count: 0, totalConf: 0, totalIntensity: 0 };
       byM[m].count++;
       byM[m].totalConf += s.overall_confidence || 0;
+      byM[m].totalIntensity += rrlsIntensity(s);
     }
     return Object.entries(byM).map(([month, v]) => ({
       month,
       count: v.count,
       avgConf: v.count > 0 ? v.totalConf / v.count / 10 : 0, // normalize to 0-1
+      avgIntensity: v.count > 0 ? v.totalIntensity / v.count : 0, // 1-4 scale
     })).sort((a, b) => a.month.localeCompare(b.month));
   }, [rrls]);
 
   const ntsByMonth = useMemo(() => {
-    const byM: Record<string, { count: number; totalConf: number }> = {};
+    const byM: Record<string, { count: number; totalConf: number; totalIntensity: number }> = {};
     for (const s of nts) {
       if (!s.date) continue;
       const m = s.date.slice(0, 7);
       if (m < TKG_START) continue;
-      if (!byM[m]) byM[m] = { count: 0, totalConf: 0 };
+      if (!byM[m]) byM[m] = { count: 0, totalConf: 0, totalIntensity: 0 };
       byM[m].count++;
       byM[m].totalConf += s.overall_confidence || 0;
+      byM[m].totalIntensity += ntsIntensity(s);
     }
     return Object.entries(byM).map(([month, v]) => ({
       month,
       count: v.count,
       avgConf: v.count > 0 ? v.totalConf / v.count / 10 : 0,
+      avgIntensity: v.count > 0 ? v.totalIntensity / v.count : 0, // ~1-5 scale
     })).sort((a, b) => a.month.localeCompare(b.month));
   }, [nts]);
 
@@ -94,48 +127,59 @@ export default function CrossDomainOverlay() {
         yaxis: 'y',
       });
 
-      // RRLS bubbles — size=count, opacity=confidence, y=confidence
+      // RRLS bubbles — size=count, Y=intensity, alpha=confidence
       if (showRRLS && rrlsByMonth.length > 0) {
         const maxCount = Math.max(...rrlsByMonth.map(r => r.count), 1);
         out.push({
           type: 'scatter', mode: 'markers',
           name: `RRLS (${totalRRLS})`,
           x: rrlsByMonth.map(r => r.month),
-          y: rrlsByMonth.map(r => r.avgConf),
+          y: rrlsByMonth.map(r => r.avgIntensity),
           marker: {
             size: rrlsByMonth.map(r => 10 + (r.count / maxCount) * 35),
-            color: '#ff4444',
-            opacity: rrlsByMonth.map(r => 0.5 + r.avgConf * 0.5),
+            color: rrlsByMonth.map(r => {
+              const a = 0.35 + r.avgConf * 0.65;
+              return `rgba(255, 68, 68, ${a})`;
+            }),
             line: { color: '#ff4444', width: 1 },
           },
-          text: rrlsByMonth.map(r => r.avgConf > 0 ? r.avgConf.toFixed(2) : ''),
-          textposition: 'top center',
-          textfont: { size: 10, color: '#e0e0e0' },
           yaxis: 'y2',
-          hovertemplate: '%{x}<br>RRLS count: %{customdata}<br>Avg confidence: %{y:.2f}<extra></extra>',
-          customdata: rrlsByMonth.map(r => r.count),
+          hoverlabel: { bgcolor: '#2a1520', bordercolor: '#ff4444', font: { color: '#f0f0f0', size: 13 } },
+          hovertext: rrlsByMonth.map(r =>
+            `<b>${r.month}</b><br>` +
+            `RRLS count: <b>${r.count}</b><br>` +
+            `Avg intensity: <b>${r.avgIntensity.toFixed(2)}</b> (1–4 scale)<br>` +
+            `Avg confidence: <b>${(r.avgConf * 100).toFixed(0)}%</b>`
+          ),
+          hoverinfo: 'text',
         });
       }
 
-      // NTS ☢ markers
+      // NTS ☢ markers — Y=intensity, alpha=confidence
       if (showNTS && ntsByMonth.length > 0) {
         const maxCount = Math.max(...ntsByMonth.map(r => r.count), 1);
         out.push({
           type: 'scatter', mode: 'text',
           name: `NTS (${totalNTS})`,
           x: ntsByMonth.map(r => r.month),
-          y: ntsByMonth.map(r => r.avgConf),
+          y: ntsByMonth.map(r => r.avgIntensity),
           text: ntsByMonth.map(() => '☢'),
           textfont: {
             size: ntsByMonth.map(r => 14 + (r.count / maxCount) * 20),
             color: ntsByMonth.map(r => {
-              const a = Math.round((0.5 + r.avgConf * 0.5) * 255);
-              return `rgba(255, 215, 0, ${a / 255})`;
+              const a = 0.35 + r.avgConf * 0.65;
+              return `rgba(255, 215, 0, ${a})`;
             }),
           },
           yaxis: 'y2',
-          hovertemplate: '%{x}<br>NTS count: %{customdata}<br>Avg confidence: %{y:.2f}<extra></extra>',
-          customdata: ntsByMonth.map(r => r.count),
+          hoverlabel: { bgcolor: '#2a2510', bordercolor: '#ffd700', font: { color: '#f0f0f0', size: 13 } },
+          hovertext: ntsByMonth.map(r =>
+            `<b>${r.month}</b><br>` +
+            `NTS count: <b>${r.count}</b><br>` +
+            `Avg intensity: <b>${r.avgIntensity.toFixed(2)}</b> (tone/cond/conseq)<br>` +
+            `Avg confidence: <b>${(r.avgConf * 100).toFixed(0)}%</b>`
+          ),
+          hoverinfo: 'text',
         });
       }
     } else if (chartMode === 'dual_axis') {
@@ -221,7 +265,7 @@ export default function CrossDomainOverlay() {
       <h2>Cross-Domain Overlay</h2>
       <p className="subtitle">
         Overlay any event predicate with RRLS/NTS rhetoric data.
-        Bubble size = statement count, opacity = confidence, Y position = avg confidence.
+        Bubble size = statement count | Y position = avg intensity (line + threat severity) | Opacity = confidence (higher confidence = more opaque).
       </p>
 
       <div className="controls">
@@ -285,12 +329,12 @@ export default function CrossDomainOverlay() {
               ...(chartMode !== 'normalized' ? {
                 yaxis2: {
                   title: {
-                    text: chartMode === 'bars_bubbles' ? 'Avg Confidence (0-1)' : 'Rhetoric Count',
+                    text: chartMode === 'bars_bubbles' ? 'Avg Intensity (severity scale)' : 'Rhetoric Count',
                     font: { size: 12 },
                   },
                   overlaying: 'y', side: 'right',
                   gridcolor: 'rgba(42, 58, 90, 0.3)',
-                  ...(chartMode === 'bars_bubbles' ? { range: [0.3, 1.05] } : {}),
+                  ...(chartMode === 'bars_bubbles' ? { range: [1.0, 4.5] } : {}),
                 },
               } : {}),
               legend: {

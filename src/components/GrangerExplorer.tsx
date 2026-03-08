@@ -2,15 +2,33 @@ import { useEffect, useState, useMemo } from 'react';
 import Plot from './Plot';
 import ChartInfo from './ChartInfo';
 import { load } from '../data';
-import type { GrangerResult, CrossCorrelation } from '../types';
+import type { GrangerResult, CrossCorrelation, CausalEdge } from '../types';
 import { predColor, sigColor, PRED_COLORS } from '../colors';
 
 const ALL_PREDS = Object.keys(PRED_COLORS);
 const RHETORIC = ['RED_LINES', 'NUCLEAR_THREATS'];
 
+// Fixed positions for network layout
+const NODE_POS: Record<string, [number, number]> = {
+  THREATENS: [1.5, 8],
+  ATTACKS: [8.5, 8],
+  LAUNCHES: [5, 9.5],
+  RED_LINES: [2, 5],
+  NUCLEAR_THREATS: [8, 5],
+  AIDS: [0.5, 2],
+  SANCTIONS: [3.5, 1],
+  CYBER_ATTACKS: [6.5, 1],
+  DISINFORMS: [2, 0],
+  CONTROLS: [8, 2],
+  DISPLACES: [5, 0],
+  TRADES_FOSSIL: [10, 3],
+  ARMS: [0, 4],
+};
+
 export default function GrangerExplorer() {
   const [granger, setGranger] = useState<GrangerResult[]>([]);
   const [xcorr, setXcorr] = useState<CrossCorrelation[]>([]);
+  const [networkEdges, setNetworkEdges] = useState<CausalEdge[]>([]);
   const [focusTarget, setFocusTarget] = useState('RED_LINES');
   const [mode, setMode] = useState<'triggers' | 'effects'>('triggers');
   const [xcorrSource, setXcorrSource] = useState('THREATENS');
@@ -18,7 +36,109 @@ export default function GrangerExplorer() {
   useEffect(() => {
     load<GrangerResult[]>('granger_results.json').then(setGranger);
     load<CrossCorrelation[]>('cross_correlations.json').then(setXcorr);
+    load<CausalEdge[]>('causal_network.json').then(setNetworkEdges);
   }, []);
+
+  // Build network graph traces — directional arrows with F-stat labels
+  const networkTraces = useMemo(() => {
+    const edges = networkEdges.filter(e => e.p_value < 0.05);
+    const out: any[] = [];
+
+    for (const edge of edges) {
+      const sp = NODE_POS[edge.source];
+      const tp = NODE_POS[edge.target];
+      if (!sp || !tp) continue;
+
+      const isRhetoricTarget = edge.target === 'RED_LINES' || edge.target === 'NUCLEAR_THREATS';
+      const isRhetoricSource = edge.source === 'RED_LINES' || edge.source === 'NUCLEAR_THREATS';
+      // Highlight edges related to current focus
+      const isFocusEdge = edge.target === focusTarget || edge.source === focusTarget;
+      const color = isFocusEdge
+        ? (isRhetoricTarget ? '#ff4444' : isRhetoricSource ? '#3fb950' : predColor(edge.source))
+        : '#383f4a';
+      const width = Math.min(1 + edge.f_stat / 8, 5);
+
+      const dx = tp[0] - sp[0];
+      const dy = tp[1] - sp[1];
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const ox = -dy / len * 0.15;
+      const oy = dx / len * 0.15;
+      const shrink = 0.4 / len;
+      const sx = sp[0] + ox + dx * shrink;
+      const sy = sp[1] + oy + dy * shrink;
+      const tx = tp[0] + ox - dx * shrink;
+      const ty = tp[1] + oy - dy * shrink;
+
+      // Edge line
+      out.push({
+        type: 'scatter', mode: 'lines',
+        x: [sx, tx, null], y: [sy, ty, null],
+        line: { color, width: isFocusEdge ? width : Math.max(width * 0.5, 1) },
+        opacity: isFocusEdge ? 0.85 : 0.25,
+        hoverinfo: 'text',
+        text: `${edge.source} → ${edge.target}\nF=${edge.f_stat.toFixed(1)}, p=${edge.p_value.toFixed(4)}, lag=${edge.lag}w`,
+        showlegend: false,
+      });
+
+      // Arrowhead
+      const angle = Math.atan2(dy, dx);
+      const al = 0.3;
+      out.push({
+        type: 'scatter', mode: 'lines',
+        x: [tx - al * Math.cos(angle - 0.35), tx, tx - al * Math.cos(angle + 0.35)],
+        y: [ty - al * Math.sin(angle - 0.35), ty, ty - al * Math.sin(angle + 0.35)],
+        fill: 'toself', fillcolor: color,
+        line: { color, width: 1 },
+        opacity: isFocusEdge ? 0.85 : 0.25,
+        hoverinfo: 'skip', showlegend: false,
+      });
+
+      // F-stat label (only for focus edges to avoid clutter)
+      if (isFocusEdge) {
+        const mx = (sx + tx) / 2 + ox * 2;
+        const my = (sy + ty) / 2 + oy * 2;
+        out.push({
+          type: 'scatter', mode: 'text',
+          x: [mx], y: [my],
+          text: [`F=${edge.f_stat.toFixed(0)} (${edge.lag}w)`],
+          textfont: { size: 9, color: '#b0b8c8' },
+          hoverinfo: 'skip', showlegend: false,
+        });
+      }
+    }
+
+    // Nodes
+    const nodes = Object.entries(NODE_POS);
+    const isRhetoric = (n: string) => n === 'RED_LINES' || n === 'NUCLEAR_THREATS';
+    const isFocus = (n: string) => n === focusTarget;
+    out.push({
+      type: 'scatter', mode: 'markers+text',
+      x: nodes.map(([, p]) => p[0]),
+      y: nodes.map(([, p]) => p[1]),
+      marker: {
+        size: nodes.map(([n]) => isFocus(n) ? 32 : isRhetoric(n) ? 26 : 18),
+        color: nodes.map(([n]) => predColor(n)),
+        opacity: nodes.map(([n]) => {
+          if (isFocus(n)) return 1;
+          const connected = edges.some(e => (e.source === n && e.target === focusTarget) || (e.target === n && e.source === focusTarget));
+          return connected ? 0.9 : 0.35;
+        }),
+        line: { color: '#1a1a2e', width: 2 },
+      },
+      text: nodes.map(([n]) => n === 'NUCLEAR_THREATS' ? 'NUCLEAR\nTHREATS' : n.replace('_', '\n')),
+      textposition: 'bottom center',
+      textfont: { size: 9, color: '#e0e0e0' },
+      hoverinfo: 'text',
+      hovertext: nodes.map(([n]) => {
+        const incoming = edges.filter(e => e.target === n);
+        const outgoing = edges.filter(e => e.source === n);
+        return `${n}\nIncoming: ${incoming.length}\nOutgoing: ${outgoing.length}`;
+      }),
+      showlegend: false,
+    });
+
+    return out;
+  }, [networkEdges, focusTarget]);
 
   // Triggers: X → focusTarget
   const triggers = useMemo(() => {
@@ -54,6 +174,33 @@ export default function GrangerExplorer() {
       <p className="subtitle">
         Granger tests whether past values of X help predict future values of Y beyond Y's own history (max lag = 4 weeks).
       </p>
+
+      <div className="chart-row">
+        <div className="chart-box" style={{ minWidth: '100%' }}>
+          <div className="chart-title-bar">
+            <h4>Causal Network — Focus: {focusTarget}</h4>
+            <ChartInfo title="Causal Network Graph" description="Directed graph of significant Granger-causal relationships (p<0.05). Arrows show causation direction; labels show F-statistic and lag. Click a node concept in the Focus buttons below to highlight its connections. Edge thickness reflects F-stat magnitude." />
+          </div>
+          {networkTraces.length > 0 && (
+            <Plot
+              data={networkTraces}
+              layout={{
+                paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+                font: { color: '#e0e0e0' },
+                margin: { t: 10, b: 30, l: 10, r: 10 },
+                height: 500,
+                xaxis: { visible: false, range: [-1, 11], fixedrange: true },
+                yaxis: { visible: false, range: [-1, 10.5], scaleanchor: 'x', fixedrange: true },
+                showlegend: false,
+                hovermode: 'closest',
+                dragmode: false,
+              }}
+              config={{ displayModeBar: false, responsive: true, staticPlot: false }}
+              style={{ width: '100%' }}
+            />
+          )}
+        </div>
+      </div>
 
       <div className="controls">
         <div className="toggle-row">

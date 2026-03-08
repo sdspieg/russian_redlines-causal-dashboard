@@ -78,6 +78,84 @@ export interface RRLSStatement {
   immediacy?: string;
 }
 
+// v6: Country-specific triggers
+export interface CountryTrigger {
+  source_country: string;
+  target_country?: string;
+  predicate: string;
+  rhetoric_target: string;
+  f_stat: number;
+  p_value: number;
+  lag: number;
+  note?: string;
+}
+
+export interface CountryTriggersData {
+  description: string;
+  total_tests: number;
+  fdr_surviving: number;
+  threats: CountryTrigger[];
+  aid: CountryTrigger[];
+  attacks: CountryTrigger[];
+  other: CountryTrigger[];
+}
+
+// v6: Weapon-type triggers
+export interface WeaponTrigger {
+  weapon_type: string;
+  rhetoric_target: string;
+  total_events: number;
+  f_stat: number;
+  p_value: number;
+  lag: number;
+  note?: string;
+}
+
+export interface WeaponTriggersData {
+  description: string;
+  total_tests: number;
+  fdr_surviving: number;
+  results: WeaponTrigger[];
+  non_significant: WeaponTrigger[];
+  insight: string;
+}
+
+// v6: Sliding-window analysis
+export interface SlidingWindow {
+  label: string;
+  period: string;
+  n_significant: number;
+  character: string;
+}
+
+export interface PersistentPair {
+  cause: string;
+  effect: string;
+  windows_present: number;
+  pct: number;
+  note: string;
+}
+
+export interface PhaseEmergent {
+  cause: string;
+  effect: string;
+  first_appeared: string;
+  last_appeared?: string;
+  note: string;
+}
+
+export interface SlidingWindowData {
+  description: string;
+  window_size: number;
+  step: number;
+  n_windows: number;
+  stable_pairs: number;
+  total_phase_changing: number;
+  windows: SlidingWindow[];
+  persistent_pairs: PersistentPair[];
+  phase_emergent: PhaseEmergent[];
+}
+
 export interface NTSStatement {
   chunk_id: string;
   date: string;

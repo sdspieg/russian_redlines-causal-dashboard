@@ -216,21 +216,61 @@ export default function Editorial() {
           alter the system's dynamics. But which one? And at what cost?
         </p>
 
-        <h3 className="editorial-subhead">The severity question</h3>
+        <h3 className="editorial-subhead">Who triggers rhetoric: the country decomposition</h3>
 
         <p>
-          Not all red lines are created equal. When we weight by severity — a human-coded
-          measure of how serious each statement is — the same triggers appear, but the ranking
-          shifts. DISINFORMS rises sharply (F&nbsp;=&nbsp;10.2 vs 9.8 for frequency alone),
-          suggesting that disinformation campaigns precede not just more rhetoric but
-          <em>angrier</em> rhetoric. The Kremlin's propaganda apparatus, it seems, warms up
-          the domestic audience before the harshest warnings are issued.
+          When we decompose the aggregate triggers into specific country pairs (450 hypotheses
+          tested, FDR-corrected), <strong>24 pairs survive</strong>. The results reveal something
+          unexpected: aid from <strong>Luxembourg</strong> (population 660,000) triggers Russian
+          rhetoric as reliably as aid from France or the United States.
+        </p>
+        <p>
+          Moscow's rhetorical apparatus does not discriminate by the size of the cheque.
+          It responds to the <em>political signal</em> of solidarity — each new donor
+          represents another country choosing Ukraine's side. Small donors — Finland, Czech
+          Republic, Latvia, Slovenia, Portugal — appear alongside major powers in the list
+          of FDR-surviving triggers.
+        </p>
+        <p>
+          Russia's <em>own</em> threats are the third and seventh strongest triggers of its
+          own rhetoric — an internal amplification loop where hawkish statements from one
+          part of the apparatus trigger escalatory responses from another.
+        </p>
+
+        <h3 className="editorial-subhead">What types of violence matter</h3>
+
+        <p>
+          The daily grind of positional warfare — shelling (28,716 events), artillery
+          duels, drone strikes — does <em>not</em> predict Russian rhetoric. What does?
+          Politically salient events: <strong>attacks on civilians</strong> (F=13.2,
+          only 113 events), <strong>territory changes</strong> (F=10.3),
+          <strong>demonstrations</strong> (F=12.1), and <strong>abductions</strong> (F=6.7).
+        </p>
+        <p>
+          The rhetoric responds to what makes <em>headlines</em>, not to what changes the
+          <em>military balance</em>. The deadliest weapon category fails to predict it;
+          the rarest category that does is 254 times less common but far more politically charged.
+        </p>
+
+        <h3 className="editorial-subhead">But none of it lasts</h3>
+
+        <p>
+          When we run the same Granger tests on overlapping one-year windows (13 windows,
+          shifted by one quarter), a striking result emerges: <strong>no single causal pair
+          is significant in all 13 windows</strong>. The war's cross-domain dynamics follow
+          a U-shaped curve — 27 significant pairs during the invasion, collapsing to just 5
+          during the "frozen conflict" of mid-2023, then rebuilding to 26 by late 2024.
+        </p>
+        <p>
+          The causal pairs active in late 2024 are largely <em>different</em> from those
+          of early 2022. The war resumed cascading, but along new channels. Policy conclusions
+          drawn from any single phase must be qualified.
         </p>
 
         <h3 className="editorial-subhead">What this means</h3>
 
         <p>
-          Three implications stand out. First, Russian red-line rhetoric is <strong>predictable</strong>,
+          Four implications stand out. First, Russian red-line rhetoric is <strong>predictable</strong>,
           not spontaneous — it follows identifiable triggers with consistent time lags, making
           it amenable to early-warning systems. Second, the aid–rhetoric feedback loop means that
           Western policymakers face a genuine dilemma: every arms package will provoke a rhetorical
@@ -238,6 +278,8 @@ export default function Editorial() {
           either — threats alone suffice as triggers. Third, nuclear signalling is structurally
           different from red-line signalling — narrower triggers, different targets, and a higher
           threshold — which suggests that the two should be monitored and modelled separately.
+          Fourth, the war's causal architecture is non-stationary — any policy prescription based
+          on one phase may not survive the next.
         </p>
 
         <div className="editorial-endnote">

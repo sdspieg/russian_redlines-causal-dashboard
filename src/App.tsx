@@ -8,6 +8,9 @@ import CorrelationHeatmap from './components/CorrelationHeatmap';
 import CrossDomainOverlay from './components/CrossDomainOverlay';
 import EntityAnalysis from './components/EntityAnalysis';
 import Editorial from './components/Editorial';
+import CountryTriggers from './components/CountryTriggers';
+import WeaponTriggers from './components/WeaponTriggers';
+import SlidingWindow from './components/SlidingWindow';
 import './index.css';
 
 const TABS = [
@@ -15,6 +18,9 @@ const TABS = [
   { id: 'timeseries', label: 'Time Series', color: '#4fc3f7' },
   { id: 'overlay', label: 'Cross-Domain Overlay', color: '#3fb950' },
   { id: 'granger', label: 'Granger Causality', color: '#ff7b72' },
+  { id: 'countries', label: 'Country Triggers', color: '#58a6ff' },
+  { id: 'weapons', label: 'Weapon Types', color: '#ffa657' },
+  { id: 'phases', label: 'War Phases', color: '#d2a8ff' },
   { id: 'network', label: 'Causal Network', color: '#d2a8ff' },
   { id: 'heatmap', label: 'Correlation Heatmap', color: '#ffa657' },
   { id: 'entities', label: 'Entity Analysis', color: '#fdd835' },
@@ -58,6 +64,9 @@ function App() {
         {activeTab === 'timeseries' && <TimeSeries />}
         {activeTab === 'overlay' && <CrossDomainOverlay />}
         {activeTab === 'granger' && <GrangerExplorer />}
+        {activeTab === 'countries' && <CountryTriggers />}
+        {activeTab === 'weapons' && <WeaponTriggers />}
+        {activeTab === 'phases' && <SlidingWindow />}
         {activeTab === 'network' && <CausalNetwork />}
         {activeTab === 'heatmap' && <CorrelationHeatmap />}
         {activeTab === 'entities' && <EntityAnalysis />}

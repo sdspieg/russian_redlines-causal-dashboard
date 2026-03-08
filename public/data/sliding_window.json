@@ -1,0 +1,38 @@
+{
+  "description": "Sliding-window Granger causality: 52-week windows, 13-week step, 13 overlapping windows",
+  "window_size": 52,
+  "step": 13,
+  "n_windows": 13,
+  "stable_pairs": 0,
+  "total_phase_changing": 77,
+  "windows": [
+    {"label": "2022-02 → 2023-02", "period": "Invasion", "n_significant": 27, "character": "Maximum cross-domain cascading"},
+    {"label": "2022-05 → 2023-05", "period": "Post-Bucha", "n_significant": 12, "character": "Sanctions-driven complexity"},
+    {"label": "2022-08 → 2023-08", "period": "Counteroffensives", "n_significant": 14, "character": "Military dynamics dominate"},
+    {"label": "2022-11 → 2023-11", "period": "Tank commitments", "n_significant": 15, "character": "Aid-rhetoric interplay"},
+    {"label": "2023-02 → 2024-02", "period": "Positional", "n_significant": 8, "character": "Decoupling begins"},
+    {"label": "2023-05 → 2024-05", "period": "Frozen conflict", "n_significant": 5, "character": "Causal trough"},
+    {"label": "2023-08 → 2024-08", "period": "Failed offensive", "n_significant": 10, "character": "Slow rebuilding"},
+    {"label": "2023-11 → 2024-11", "period": "Aid fatigue", "n_significant": 12, "character": "New patterns emerge"},
+    {"label": "2024-02 → 2025-02", "period": "Kursk + election", "n_significant": 17, "character": "Complexity returns"},
+    {"label": "2024-05 → 2025-05", "period": "North Korean forces", "n_significant": 17, "character": "Sustained complexity"},
+    {"label": "2024-08 → 2025-08", "period": "Donbas advances", "n_significant": 21, "character": "Approaching peak"},
+    {"label": "2024-11 → 2025-11", "period": "Late-war peak", "n_significant": 26, "character": "Near-invasion-level complexity"},
+    {"label": "2025-02 → 2026-02", "period": "Current", "n_significant": 10, "character": "Settling"}
+  ],
+  "persistent_pairs": [
+    {"cause": "CYBER_ATTACKS", "effect": "CONTROLS", "windows_present": 8, "pct": 62, "note": "Cyber ops precede territorial changes"},
+    {"cause": "RED_LINES", "effect": "CYBER_ATTACKS", "windows_present": 6, "pct": 46, "note": "Degradation cascade"},
+    {"cause": "CYBER_ATTACKS", "effect": "RED_LINES", "windows_present": 6, "pct": 46, "note": "Degradation cascade (reverse)"},
+    {"cause": "LAUNCHES", "effect": "RED_LINES", "windows_present": 6, "pct": 46, "note": "Missile campaigns trigger rhetoric"},
+    {"cause": "ATTACKS", "effect": "CONTROLS", "windows_present": 6, "pct": 46, "note": "Ground combat drives territory"},
+    {"cause": "LAUNCHES", "effect": "AIDS", "windows_present": 5, "pct": 38, "note": "Missile strikes drive aid responses"},
+    {"cause": "THREATENS", "effect": "RED_LINES", "windows_present": 5, "pct": 38, "note": "Threat spiral"},
+    {"cause": "AIDS", "effect": "RED_LINES", "windows_present": 4, "pct": 31, "note": "Aid-rhetoric loop"}
+  ],
+  "phase_emergent": [
+    {"cause": "ATTACKS", "effect": "THREATENS", "first_appeared": "2023-08 → 2024-08", "note": "Ground combat driving threats is a late-war phenomenon"},
+    {"cause": "DISPLACES", "effect": "AIDS", "first_appeared": "2024-02 → 2025-02", "note": "Refugee flows predicting aid emerged after 'fatigue' broke"},
+    {"cause": "RED_LINES", "effect": "THREATENS", "first_appeared": "2022-11 → 2023-11", "last_appeared": "2023-05 → 2024-05", "note": "Rhetoric escalating to threats was mid-war only"}
+  ]
+}
